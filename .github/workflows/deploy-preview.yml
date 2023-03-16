@@ -5,9 +5,48 @@ on:
     branches: [ master ]
 
 jobs:
+  precheck:
+    name: Precheck
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check if actor is org member
+        id: is-org-member
+        run: gh api -X GET orgs/PaloAltoNetworks/memberships/${{ github.actor }} | jq -r .message
+    outputs:
+      is-org-member-result: ${{ steps.is-org-member.outputs.is-org-member-result }}
+
   analyze:
-    if: github.repository_owner	== 'PaloAltoNetworks'
+    if: github.repository_owner	== 'PaloAltoNetworks' && ${{needs.precheck.outputs.is-org-member-result}} == 'null'
     name: Analyze
+    needs: precheck
+    runs-on: pan-dev-runner
+    permissions:
+      contents: read
+      security-events: write
+
+    strategy:
+      fail-fast: true
+      matrix:
+        language: [ 'javascript' ]
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+      with:
+        ref: ${{ github.event.pull_request.head.sha }}
+
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v2
+      with:
+        languages: ${{ matrix.language }}
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v2
+
+  analyze-unsafe:
+    if: github.repository_owner	== 'PaloAltoNetworks' && ${{needs.precheck.outputs.is-org-member-result}} != 'null'
+    name: Analyze
+    needs: precheck
     runs-on: pan-dev-runner
     environment: default
     permissions:
@@ -35,7 +74,12 @@ jobs:
 
   build:
     name: Build
-    needs: analyze
+    needs: [analyze, analyze-unsafe]
+    if: |
+      always() && 
+      (needs.analyze.result == 'success' || needs.analyze.result == 'skipped') && 
+      (needs.analyze-unsafe.result == 'success' || needs.analyze-unsafe.result == 'skipped') && 
+      !(needs.analyze.result == 'skipped' && needs.analyze-unsafe.result == 'skipped')
     runs-on: pan-dev-runner
     permissions:
       contents: read
