@@ -152,6 +152,8 @@ Use this deployment to embed Defender to AWS Lambda Layers so that all serverles
 
 1. Download the Serverless Defender bundle for AWS Lambda layer by using the [Serverless Defender](prisma-cloud/api/cwpp/post-images-twistlock-defender-layer-zip/) ![alt text](/icons/api-icon-pan-dev.svg) endpoint.
 
+*** THE LINK ABOVE (prisma-cloud/api/cwpp/post-images-twistlock-defender-layer-zip) in the documentation is broken. Please update API reference docs with new link. We need to update this because the actual API Reference doc for this endpoint isn't even properly documented and this link is broken. We have large scale customers complaining about this ***
+
     Specify the function name, runtime, and region in the following API cURL request:
 
     ```bash
@@ -159,13 +161,13 @@ Use this deployment to embed Defender to AWS Lambda Layers so that all serverles
     ```
 
 
-2. Upload the layer to AWS and add it to the function's configuration.
+3. Upload the layer to AWS and add it to the function's configuration.
 
-3. Save current Lambda handler setting in ORIGINAL_HANDLER environment variable.
+4. Save current Lambda handler setting in ORIGINAL_HANDLER environment variable.
 
-4. Change the Lambda handler setting to Prisma Cloud Compute handler (twistlock.handler).
+5. Change the Lambda handler setting to Prisma Cloud Compute handler (twistlock.handler).
 
-5. Generate the value for the TW_POLICY environment variable by specifying your function's name (defined in key-value pair).
+6. Generate the value for the TW_POLICY environment variable by specifying your function's name (defined in key-value pair).
 
 ### AWS Serverless (Embedded)
 Use this deployment to embed Defender to secure each AWS Lambda function.
